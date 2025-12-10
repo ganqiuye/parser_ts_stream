@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <cstdint>
 #include <algorithm>
 using namespace std;
 
