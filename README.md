@@ -10,6 +10,8 @@
 
 ```shell
 g++ TsParser.cpp main.cpp -o tsParser
+# if run some erros, compile like this:
+g++ TsParser.cpp main.cpp -o tsParser -static-libgcc -static-libstdc++
 ```
 
 # 2. usage
