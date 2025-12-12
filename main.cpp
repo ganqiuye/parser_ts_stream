@@ -1,6 +1,8 @@
 #include "TsParser.h"
 #include <getopt.h>
 void Usage (char* argv[]) {
+    std::cout << "Copyright: ganqiuye(ganqiuye@gmail.com)" << std::endl;
+    std::cout << "Version: 1.1\n" << std::endl;
     std::cout << "Usage: " << argv[0] << " <infile> [OPTIONS...]" << std::endl;
     std::cout << "OPTIONS:" << std::endl;
     std::cout << "  -h | --help           : Show this help message" << std::endl;
@@ -11,8 +13,8 @@ void Usage (char* argv[]) {
     std::cout << "  -d | --dump           : Dump all PIDs to es files" << std::endl;
     std::cout << "  -s | --showinfo       : Show stream information" << std::endl;
     std::cout << "  -o | --output_pid     : Output PID to out_pid.es" << std::endl;
-    std::cout << "  -r | --remove         : Remove all PIDs except video, audio and text" << std::endl;
-    std::cout << "  -m | --merge          : Merge all PIDs into one file" << std::endl;
+    // std::cout << "  -r | --remove         : Remove all PIDs except video, audio and text" << std::endl;
+    // std::cout << "  -m | --merge          : Merge all PIDs into one file" << std::endl;
     std::cout << "  -p | --print          : Print pts" << std::endl;
     std::cout << "\nExample: " << argv[0] << " -i input.ts -v 0x100 -a 0x101" << std::endl;
     std::cout << "\nIf only <infile> is provided, it is equivalent to: " << argv[0] << " -i <infile> -s\n" << std::endl;
