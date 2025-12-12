@@ -291,6 +291,7 @@ void TsParser::packet(uint8_t *pkt) {
     if (sync_byte != 0x47) {
         return;
     }
+    mPacketIndex++;
     int transport_error_indicator = (pkt[1] >> 7) & 0x01;
     int payload_unit_start_indicator = (pkt[1] >> 6) & 0x01;
     int transport_priority = (pkt[1] >> 5) & 0x01;
@@ -615,6 +616,10 @@ void TsParser::parseSdt(uint8_t *pkt, int len) {
         std::string provider_name;
         while (desc_pos + 2 <= desc_end && desc_end <= len) {
             uint8_t descriptor_tag = pkt[desc_pos];
+            if (descriptor_tag != 0x48) {
+                desc_pos += 2 + pkt[desc_pos + 1];
+                continue;
+            }
             uint8_t descriptor_len = pkt[desc_pos + 1];
             uint8_t service_type   = pkt[desc_pos + 2];
             if (desc_pos + 2 + descriptor_len > desc_end) break;

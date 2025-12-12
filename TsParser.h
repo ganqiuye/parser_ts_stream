@@ -102,6 +102,7 @@ class TsParser{
         std::map<int, SectionBuffer> mPmtSectionBuf;
         std::map<int, ServiceInfo> mServiceInfos;
         std::map<int, SectionBuffer> mSdtSectionBuf;
+        uint64_t mPacketIndex = 0;
     private:
         void packet(uint8_t *pkt);
         int parseAdaptationField(uint8_t *pkt, int pid);
