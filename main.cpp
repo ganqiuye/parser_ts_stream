@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     int pid = 0;
     bool showInfoFlag = false;
     bool hasInputFile = false;
-    if (argc == 2) {
+    if (argc == 2 && argv[1][0] != '-') {
         parser.setCommand(OPTION_SET_INPUT_FILE, (void*)argv[1]);
         showInfoFlag = true;
         parser.setCommand(OPTION_SHOW_STREAM_INFO, nullptr);
