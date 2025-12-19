@@ -117,6 +117,7 @@ class TsParser{
         string parsePrivatePesDescriptor(const uint8_t* es_info, int es_info_length);
         void parseSdt(uint8_t *pkt, int len);
         void processSectionData(uint8_t* pkt, int offset, int pid, int continuity_counter, int payload_unit_start_indicator, std::map<int, SectionBuffer>& secbuf_map, void (TsParser::*parseFunc)(uint8_t*, int));
+        bool readNextTsPacket(FILE* fp, uint8_t* pkt, bool& isSynced);
 };
 
 #endif /* _TS_PARSER_H_ */

@@ -82,42 +82,58 @@ void TsParser::setCommand(CommandOption option, void* param) {
     }
 }
 
+bool TsParser::readNextTsPacket(FILE* fp, uint8_t* pkt, bool& isSynced) {
+    if (!isSynced) {
+        int c;
+        while ((c = fgetc(fp)) != EOF) {
+            if (c == 0x47) {
+                pkt[0] = 0x47;
+                size_t n = fread(pkt + 1, 1, 187, fp);
+                if (n < 187) return false;
+                int next = fgetc(fp);
+                if (next == 0x47) {
+                    fseek(fp, -1, SEEK_CUR);
+                    isSynced = true;
+                    return true;
+                } else if (next == EOF) {
+                    return false;
+                }
+                fseek(fp, -187, SEEK_CUR);
+            }
+        }
+        return false;
+    } else {
+        size_t n = fread(pkt, 1, 188, fp);
+        return n == 188;
+    }
+}
+
 int TsParser::parse() {
     mInFp = fopen(mFilePath.c_str(), "rb");
     if (!mInFp) {
         std::cerr << "Cannot open " << mFilePath << std::endl;
         return -1;
     }
-    while (true) {
-        int c = fgetc(mInFp);
-        if (c == EOF)
-            break;
 
-        if (c == 0x47) {
-            uint8_t pkt[188];
-            size_t  n;
+    uint8_t pkt[188];
+    bool isSynced = false;
+    while (readNextTsPacket(mInFp, pkt, isSynced)) {
+        packet(pkt);
 
-            pkt[0] = 0x47;
-
-            n = fread(pkt + 1, 1, 187, mInFp);
-            if (n == 187) {
-                packet(pkt);
-            }
-            if (mShowStreamInfo && !mPat.empty()) {
-                int pat_program_count = mPat.size();
-                int got_pmt_count = 0;
-                for (const auto& entry : mPat) {
-                    uint16_t program_number = entry.first;
-                    for (const auto& pmt : mPmt) {
-                        if (pmt.program_number == program_number && pmt.isGotPmt && pmt.isGotServiceInfo) {
-                            got_pmt_count++;
-                            break;
-                        }
+        if (mShowStreamInfo && !mPat.empty()) {
+            int pat_program_count = mPat.size();
+            int got_pmt_count = 0;
+            for (const auto& entry : mPat) {
+                uint16_t program_number = entry.first;
+                for (const auto& pmt : mPmt) {
+                    if (pmt.program_number == program_number && pmt.isGotPmt && pmt.isGotServiceInfo) {
+                        got_pmt_count++;
+                        break;
                     }
                 }
-                if (got_pmt_count == pat_program_count) {
-                    break;
-                }
+            }
+            if (got_pmt_count == pat_program_count) {
+                break;
             }
         }
     }

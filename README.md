@@ -29,7 +29,8 @@ OPTIONS:
   -o | --output_pid     : Output PID to out_pid.es
   -p | --print          : Print pts
 
-Example: ./tsParser -i input.ts -v 0x100 -a 0x101
+Example: 
+./tsParser -i input.ts -s
 
 If only <infile> is provided, it is equivalent to: ./tsParser -i <infile> -s
 ```

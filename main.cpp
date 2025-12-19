@@ -100,9 +100,11 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'r':
                     // Implement remove all PIDs except video, audio and text functionality
+                    // TODO
                     break;
                 case 'm':
                     // Implement merge all PIDs into one file functionality
+                    // TODO
                     break;
                 case 'p':
                     parser.setCommand(OPTION_PRINT_PTS, nullptr);
