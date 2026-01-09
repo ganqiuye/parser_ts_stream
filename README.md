@@ -26,7 +26,7 @@ OPTIONS:
   -h, --help              Show this help message
   -v, --version           Show version information
 
-Example: ./tsParser -i input.ts -v 0x100 -a 0x101
+Example: ./tsParser -i input.ts -p
 
 If only <infile> is provided, it is equivalent to: ./tsParser -i <infile> -s
 ```

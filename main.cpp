@@ -1,6 +1,6 @@
 #include "TsParser.h"
 #include <getopt.h>
-#define VERSION "1.1"
+#define VERSION "1.2.0"
 void Usage (char* argv[]) {
     std::cout << "Copyright: qiuye.gan(qiuye.gan@amlogic.com)" << std::endl;
     std::cout << "Version: " << VERSION << "\n" << std::endl;
@@ -14,7 +14,7 @@ void Usage (char* argv[]) {
     std::cout << "  -p, --print [PID]       Print pts (no PID => print all PIDs)" << std::endl;
     std::cout << "  -h, --help              Show this help message" << std::endl;
     std::cout << "  -v, --version           Show version information" << std::endl;
-    std::cout << "\nExample: " << argv[0] << " -i input.ts -v 0x100 -a 0x101" << std::endl;
+    std::cout << "\nExample: " << argv[0] << " -i input.ts -p" << std::endl;
     std::cout << "\nIf only <infile> is provided, it is equivalent to: " << argv[0] << " -i <infile> -s\n" << std::endl;
 }
 
