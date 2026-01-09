@@ -19,18 +19,14 @@ g++ TsParser.cpp main.cpp -o tsParser -static-libgcc -static-libstdc++
 ```
 Usage: ./tsParser <infile> [OPTIONS...]
 OPTIONS:
-  -h | --help           : Show this help message
-  -i | --infile         : Input TS file path
-  -v | --video_pid      : Video PID in decimal or hex (prefix 0x)
-  -a | --audio_pid      : Audio PID in decimal or hex (prefix 0x)
-  -t | --text_pid       : Text PID in decimal or hex (prefix 0x)
-  -d | --dump           : Dump all PIDs to es files
-  -s | --showinfo       : Show stream information
-  -o | --output_pid     : Output PID to out_pid.es
-  -p | --print          : Print pts
+  -i, --infile <FILE>     Input TS file path
+  -s, --showinfo          Show stream information
+  -o, --output_pid [PID]  Output PID to out_pid.es (no PID => dump all PIDs)
+  -p, --print [PID]       Print pts (no PID => print all PIDs)
+  -h, --help              Show this help message
+  -v, --version           Show version information
 
-Example: 
-./tsParser -i input.ts -s
+Example: ./tsParser -i input.ts -v 0x100 -a 0x101
 
 If only <infile> is provided, it is equivalent to: ./tsParser -i <infile> -s
 ```

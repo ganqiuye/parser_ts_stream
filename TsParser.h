@@ -29,10 +29,6 @@ using namespace std;
 
 typedef enum command_options {
     OPTION_SET_INPUT_FILE,
-    OPTION_SET_VIDEO_PID,
-    OPTION_SET_AUDIO_PID,
-    OPTION_SET_TEXT_PID,
-    OPTION_DUMP_ALL_PIDS,
     OPTION_OUTPUT_PID,
     OPTION_REMOVE_OTHER_PIDS,
     OPTION_MERGE_ALL_PIDS,
@@ -97,6 +93,8 @@ class TsParser{
         map<int, int> mPat; // program_number to PMT PID
         vector<Pmt> mPmt;
         bool mDumpAllPids = false;
+        bool mPrintAllPids = false;
+        int mPrintPid;
         bool isHasGetPat = false;
         bool isHasGetPmt = false;
         std::map<int, SectionBuffer> mPmtSectionBuf;

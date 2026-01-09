@@ -24,7 +24,8 @@ TsParser::TsParser(const std::string& file_path)
       mLastPcr(0x1fff),
       mVideoPid(0x1fff),
       mAudioPid(0x1fff),
-      mTextPid(0x1fff) {
+      mTextPid(0x1fff),
+      mPrintPid(0x1fff) {
     mOutPidsFp.clear();
     mOutPids.clear();
 }
@@ -45,37 +46,37 @@ void TsParser::setCommand(CommandOption option, void* param) {
         case OPTION_SET_INPUT_FILE:
             mFilePath = string((char*)param);
             break;
-        case OPTION_SET_VIDEO_PID:
-            mVideoPid = *(uint16_t*)param;
-            break;
-        case OPTION_SET_AUDIO_PID:
-            mAudioPid = *(uint16_t*)param;
-            break;
-        case OPTION_SET_TEXT_PID:
-            mTextPid = *(uint16_t*)param;
-            break;
         case OPTION_OUTPUT_PID:
         {
-            char out_filename[256];
             int pid = *(int*)param;
-            sprintf(out_filename, "out_%04x.es", pid);
-            FILE* out_fp = fopen(out_filename, "wb");
-            if (out_fp) {
-                mOutPidsFp.push_back(out_fp);
-                mOutPids[pid] = out_fp;
+            if (pid == 0x1fff) {
+                mDumpAllPids = true;
             } else {
-                std::cerr << "Cannot open output file: " << out_filename << std::endl;
+                char out_filename[256];
+                sprintf(out_filename, "out_%04x.es", pid);
+                FILE* out_fp = fopen(out_filename, "wb");
+                if (out_fp) {
+                    mOutPidsFp.push_back(out_fp);
+                    mOutPids[pid] = out_fp;
+                } else {
+                    std::cerr << "Cannot open output file: " << out_filename << std::endl;
+                }
             }
             break;
         }
         case OPTION_PRINT_PTS:
+        {
+            int pid = *(int*)param;
+            if (pid == 0x1fff) {
+                mPrintAllPids = true;
+            } else {
+                mPrintPid = pid;
+            }
             mPrintPts = true;
             break;
+        }
         case OPTION_SHOW_STREAM_INFO:
             mShowStreamInfo = true;
-            break;
-        case OPTION_DUMP_ALL_PIDS:
-            mDumpAllPids = true;
             break;
         default:
             break;
@@ -218,39 +219,41 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid)
     if (len < 9 + pes_header_length) {
         return;
     }
-    if (stream_id != 0xBC && stream_id != 0xBF &&
-        stream_id != 0xF0 && stream_id != 0xF1 && stream_id != 0xFF &&
-        stream_id != 0xF2 && stream_id != 0xF8) {
-        // Audio or Video stream
-        int pts_dts_flag = (pkt[7] >> 6) & 0x03;
-        if (pts_dts_flag == 0x02 || pts_dts_flag == 0x03) {
-            int pts_dts = ((pkt[9] & 0x0e) << 29)
-                        | (pkt[10] << 22)
-                        | ((pkt[11] & 0xfe) << 14)
-                        | (pkt[12] << 7)
-                        | (pkt[13] >> 1);
-            // Further processing of PTS/DTS can be added here
-            if (pts_dts_flag == 0x02) {
-                // PTS only
-                uint64_t pts = pts_dts;
-                // mLastPts = pts;
-                // Process PTS value as needed
-                if (mPrintPts) {
-                    std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << std::dec  << " (" << pts << ")" << std::endl;
-                }
-            } else if (pts_dts_flag == 0x03) {
-                // PTS and DTS
-                uint64_t pts = pts_dts;
-                uint64_t dts = ((pkt[14] & 0x0E) << 29)
-                            | (pkt[15] << 22)
-                            | ((pkt[16] & 0xFE) << 14)
-                            | (pkt[17] << 7)
-                            | (pkt[18] >> 1);
-                // mLastPts = pts;
-                // mLastDts = dts;
-                // Process PTS and DTS values as needed
-                if (mPrintPts) {
-                    std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << ", DTS: 0x" << std::hex << dts << std::dec << std::endl;
+    if (mPrintPts) {
+        if (stream_id != 0xBC && stream_id != 0xBF &&
+            stream_id != 0xF0 && stream_id != 0xF1 && stream_id != 0xFF &&
+            stream_id != 0xF2 && stream_id != 0xF8) {
+            // Audio or Video stream
+            int pts_dts_flag = (pkt[7] >> 6) & 0x03;
+            if (pts_dts_flag == 0x02 || pts_dts_flag == 0x03) {
+                int pts_dts = ((pkt[9] & 0x0e) << 29)
+                            | (pkt[10] << 22)
+                            | ((pkt[11] & 0xfe) << 14)
+                            | (pkt[12] << 7)
+                            | (pkt[13] >> 1);
+                // Further processing of PTS/DTS can be added here
+                if (pts_dts_flag == 0x02) {
+                    // PTS only
+                    uint64_t pts = pts_dts;
+                    // mLastPts = pts;
+                    // Process PTS value as needed
+                    // if (mPrintPid == pid  || mPrintAllPids) {
+                    //     std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << std::dec  << " (" << pts << ")" << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids << std::endl;
+                    // }
+                } else if (pts_dts_flag == 0x03) {
+                    // PTS and DTS
+                    uint64_t pts = pts_dts;
+                    uint64_t dts = ((pkt[14] & 0x0E) << 29)
+                                | (pkt[15] << 22)
+                                | ((pkt[16] & 0xFE) << 14)
+                                | (pkt[17] << 7)
+                                | (pkt[18] >> 1);
+                    // mLastPts = pts;
+                    // mLastDts = dts;
+                    // Process PTS and DTS values as needed
+                    // if (mPrintPid == pid || mPrintAllPids) {
+                    //     std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << ", DTS: 0x" << std::hex << dts << std::dec << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids<< std::endl;
+                    // }
                 }
             }
         }
