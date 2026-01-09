@@ -120,7 +120,6 @@ int main(int argc, char *argv[]) {
                             return -1;
                         }
                     }
-                    printf("Print pts for pid: 0x%X\n", pid);
                     parser.setCommand(OPTION_PRINT_PTS, (void*)&pid);
                     break;
                 }

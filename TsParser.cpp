@@ -237,9 +237,9 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid)
                     uint64_t pts = pts_dts;
                     // mLastPts = pts;
                     // Process PTS value as needed
-                    // if (mPrintPid == pid  || mPrintAllPids) {
-                    //     std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << std::dec  << " (" << pts << ")" << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids << std::endl;
-                    // }
+                    if (mPrintPid == pid  || mPrintAllPids) {
+                        std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << std::dec  << " (" << pts << ")" << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids << std::endl;
+                    }
                 } else if (pts_dts_flag == 0x03) {
                     // PTS and DTS
                     uint64_t pts = pts_dts;
@@ -251,9 +251,9 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid)
                     // mLastPts = pts;
                     // mLastDts = dts;
                     // Process PTS and DTS values as needed
-                    // if (mPrintPid == pid || mPrintAllPids) {
-                    //     std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << ", DTS: 0x" << std::hex << dts << std::dec << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids<< std::endl;
-                    // }
+                    if (mPrintPid == pid || mPrintAllPids) {
+                        std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << ", DTS: 0x" << std::hex << dts << std::dec << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids<< std::endl;
+                    }
                 }
             }
         }
