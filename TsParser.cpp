@@ -198,7 +198,7 @@ int TsParser::parseAdaptationField(uint8_t *pkt, int pid) {
     return adaptation_field_length;
 }
 
-void TsParser::parsePes(uint8_t *pkt, int len, int pid)
+void TsParser::parsePes(uint8_t *pkt, int len, int pid, int continuity_counter)
 {
     // Implementation for parsing the PES header
     if (len < 9) {
@@ -207,18 +207,26 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid)
     int packet_start_code_prefix = (pkt[0] << 16) | (pkt[1] << 8) | pkt[2];
     if (packet_start_code_prefix != 0x000001)
     {
-        cerr << "Invalid packet start code prefix: " << std::hex << packet_start_code_prefix << std::dec << std::endl;
+        std::cerr << "Invalid packet start code prefix: " << std::hex << packet_start_code_prefix << std::dec << std::endl;
         return;
     }
     
     int stream_id = pkt[3];
     int pes_packet_length = (pkt[4] << 8) | pkt[5];//N
 
-
     int pes_header_length = pkt[8];
     if (len < 9 + pes_header_length) {
         return;
     }
+    mPidPacketCount[pid]++;
+    if (mPidPacketCount[pid] == 0xf) {
+        mPidPacketCount[pid] = 0;
+    }
+    if (mPidPacketCount[pid] != continuity_counter) {
+        std::cerr << "Warning: PID " << pid << " continuity counter mismatch. Expected: " << (mPidPacketCount[pid]) << ", Actual: " << continuity_counter << std::endl;
+        mPidPacketCount[pid] = continuity_counter;
+    }
+
     if (mPrintPts) {
         if (stream_id != 0xBC && stream_id != 0xBF &&
             stream_id != 0xF0 && stream_id != 0xF1 && stream_id != 0xFF &&
@@ -254,6 +262,14 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid)
                     if (mPrintPid == pid || mPrintAllPids) {
                         std::cout << "PID: " << pid << ", PTS: 0x" << std::hex << pts << ", DTS: 0x" << std::hex << dts << std::dec << " mPrintPid: " << mPrintPid  << " mPrintAllPids: " << mPrintAllPids<< std::endl;
                     }
+                    if (pts < dts) {
+                        std::cerr << "Warning: PTS < DTS for PID: " << pid << std::endl;
+                    } else if (pts - dts > 90000) {
+                        std::cerr << "Warning: PTS - DTS > 1 second for PID: " << pid << std::endl;
+                    } else if (pts - dts < -90000) {
+                        std::cerr << "Warning: PTS - DTS < -1 second for PID: " << pid << std::endl;
+                    }
+
                 }
             }
         }
@@ -319,6 +335,10 @@ void TsParser::packet(uint8_t *pkt) {
         return;
     }
     int transport_scrambling_control = (pkt[3] >> 6) & 0x03;
+    if (transport_scrambling_control != 0) {
+        std::cout <<  "PID: " << pid << ", transport_scrambling_control: " << transport_scrambling_control << std::endl;
+    }
+
     int adaptation_field_control = (pkt[3] >> 4) & 0x03;
     int continuity_counter = pkt[3] & 0x0F;
     int offset = 4;
@@ -370,7 +390,7 @@ void TsParser::packet(uint8_t *pkt) {
         }
         if (!mShowStreamInfo && isPesPid) {
             if (payload_unit_start_indicator) {
-                parsePes(pkt + offset, 188 - offset, pid);
+                parsePes(pkt + offset, 188 - offset, pid, continuity_counter);
             } else {
                 saveEs(pkt + offset, 188 - offset, pid);
             }

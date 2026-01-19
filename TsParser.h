@@ -101,10 +101,11 @@ class TsParser{
         std::map<int, ServiceInfo> mServiceInfos;
         std::map<int, SectionBuffer> mSdtSectionBuf;
         uint64_t mPacketIndex = 0;
+        std::map<int, uint64_t> mPidPacketCount;
     private:
         void packet(uint8_t *pkt);
         int parseAdaptationField(uint8_t *pkt, int pid);
-        void parsePes(uint8_t *pkt, int len, int pid);
+        void parsePes(uint8_t *pkt, int len, int pid, int continuity_counter);
         int parsePat(uint8_t *pkt, int len);
         void parsePmt(uint8_t *pkt, int len);
         void parsePcr(uint8_t *pkt, int len);

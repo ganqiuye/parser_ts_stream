@@ -2,7 +2,7 @@
 #include <getopt.h>
 #define VERSION "1.2.0"
 void Usage (char* argv[]) {
-    std::cout << "Copyright: qiuye.gan(qiuye.gan@amlogic.com)" << std::endl;
+    std::cout << "Copyright: qiuye.gan(ganqiuye@163.com)" << std::endl;
     std::cout << "Version: " << VERSION << "\n" << std::endl;
     std::cout << "Usage: " << argv[0] << " <infile> [OPTIONS...]" << std::endl;
     std::cout << "OPTIONS:" << std::endl;
