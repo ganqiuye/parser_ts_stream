@@ -1,6 +1,6 @@
 #include "TsParser.h"
 #include <getopt.h>
-#define VERSION "1.2.0"
+#define VERSION "1.2.1"
 void Usage (char* argv[]) {
     std::cout << "Copyright: qiuye.gan(ganqiuye@163.com)" << std::endl;
     std::cout << "Version: " << VERSION << "\n" << std::endl;
@@ -92,14 +92,14 @@ int main(int argc, char *argv[]) {
                     }
                     parser.setCommand(OPTION_OUTPUT_PID, (void*)&pid);
                     break;
-                case 'r':
-                    // Implement remove all PIDs except video, audio and text functionality
-                    // TODO
-                    break;
-                case 'm':
-                    // Implement merge all PIDs into one file functionality
-                    // TODO
-                    break;
+                // case 'r':
+                //     // Implement remove all PIDs except video, audio and text functionality
+                //     // TODO
+                //     break;
+                // case 'm':
+                //     // Implement merge all PIDs into one file functionality
+                //     // TODO
+                //     break;
                 case 'p':
                 {
                     if (optarg == nullptr) {
@@ -124,6 +124,8 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case 'v':
+                    std::cout << "Version: " << VERSION << "\n" << std::endl;
+                    return 0;
                 case ':':
                 case '?':
                 default:
