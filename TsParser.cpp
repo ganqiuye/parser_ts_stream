@@ -83,30 +83,65 @@ void TsParser::setCommand(CommandOption option, void* param) {
     }
 }
 
-bool TsParser::readNextTsPacket(FILE* fp, uint8_t* pkt, bool& isSynced) {
-    if (!isSynced) {
-        int c;
-        while ((c = fgetc(fp)) != EOF) {
-            if (c == 0x47) {
-                pkt[0] = 0x47;
-                size_t n = fread(pkt + 1, 1, 187, fp);
-                if (n < 187) return false;
-                int next = fgetc(fp);
-                if (next == 0x47) {
-                    fseek(fp, -1, SEEK_CUR);
-                    isSynced = true;
-                    return true;
-                } else if (next == EOF) {
-                    return false;
-                }
-                fseek(fp, -187, SEEK_CUR);
+int TsParser::detectPacketSize(FILE* fp) {
+    if (!fp) return 0;
+    const int candidates[] = {188, 192, 204, 376};
+    long start = ftell(fp);
+    int c;
+    while ((c = fgetc(fp)) != EOF) {
+        if (c != 0x47) continue;
+        long pos = ftell(fp) - 1;
+        for (int ps : candidates) {
+            bool ok = true;
+            for (int k = 1; k <= 3; ++k) {
+                long probe = pos + (long)k * ps;
+                if (fseek(fp, probe, SEEK_SET) != 0) { ok = false; break; }
+                int nc = fgetc(fp);
+                if (nc != 0x47) { ok = false; break; }
+            }
+            if (ok) {
+                fseek(fp, pos, SEEK_SET);
+                return ps;
             }
         }
-        return false;
-    } else {
-        size_t n = fread(pkt, 1, 188, fp);
-        return n == 188;
+        if (fseek(fp, pos + 1, SEEK_SET) != 0) break;
     }
+    fseek(fp, start, SEEK_SET);
+    return 0;
+}
+
+bool TsParser::readNextTsPacket(FILE* fp, uint8_t* pkt, bool& isSynced, int &detectedSize) {
+     if (!fp || !pkt) return false;
+
+    // detect packet size once per opened file
+    if (detectedSize == 0 && !isSynced) {
+        detectedSize = detectPacketSize(fp);
+        if (detectedSize > 0) {
+            // detectPacketSize already positioned fp at the packet start,
+            // so we are synced for this stream.
+            isSynced = true;
+        } else {
+            // fallback: try to find a 0x47 and read 188 bytes
+            int c;
+            while ((c = fgetc(fp)) != EOF) {
+                if (c != 0x47) continue;
+                long pos = ftell(fp) - 1;
+                if (fseek(fp, pos, SEEK_SET) != 0) return false;
+                size_t n = fread(pkt, 1, 188, fp);
+                if (n == 188) { isSynced = true; return true; }
+                return false;
+            }
+            return false;
+        }
+    }
+
+    // read one physical packet (may be larger than 188)
+    int ps = detectedSize ? detectedSize : 188;
+    std::vector<uint8_t> buf(ps);
+    size_t n = fread(buf.data(), 1, ps, fp);
+    if (n != (size_t)ps) return false;
+    memcpy(pkt, buf.data(), 188); // parser expects 188-byte view
+    return true;
 }
 
 int TsParser::parse() {
@@ -118,7 +153,9 @@ int TsParser::parse() {
 
     uint8_t pkt[188];
     bool isSynced = false;
-    while (readNextTsPacket(mInFp, pkt, isSynced)) {
+    int detectedPacketSize = 0;
+    while (readNextTsPacket(mInFp, pkt, isSynced, detectedPacketSize)) {
+
         packet(pkt);
 
         if (mShowStreamInfo && !mPat.empty()) {

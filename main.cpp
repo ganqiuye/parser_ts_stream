@@ -1,6 +1,6 @@
 #include "TsParser.h"
 #include <getopt.h>
-#define VERSION "1.2.1"
+#define VERSION "1.3.0"
 void Usage (char* argv[]) {
     std::cout << "Copyright: qiuye.gan(ganqiuye@163.com)" << std::endl;
     std::cout << "Version: " << VERSION << "\n" << std::endl;
