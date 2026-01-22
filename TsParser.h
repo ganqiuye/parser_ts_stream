@@ -40,7 +40,7 @@ typedef struct PmtStreamInfo {
     uint8_t stream_type;
     uint16_t elementary_pid;
     uint16_t es_info_length;
-    uint8_t *es_info; // ES_info_length bytes
+    std::vector<uint8_t> es_info; // ES_info_length bytes
 } PmtStreamInfo;
 
 typedef struct Pmt {
@@ -52,7 +52,7 @@ typedef struct Pmt {
     uint16_t pcr_pid;
     uint8_t last_section_number;
     uint16_t program_info_length;
-    uint8_t *program_info; // program_info_length bytes
+    std::vector<uint8_t> program_info; // program_info_length bytes
     vector<PmtStreamInfo> streams;
     bool isGotPmt = false;
     bool isGotServiceInfo = false;

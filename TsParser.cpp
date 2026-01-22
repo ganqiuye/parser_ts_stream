@@ -221,9 +221,9 @@ int TsParser::parseAdaptationField(uint8_t *pkt, int pid) {
                 return 0;
             }
             uint64_t pcr_base = (((uint64_t)pkt[2]) << 25)
-                        | (pkt[3] << 17)
-                        | (pkt[4] << 9)
-                        | (pkt[5] << 1)
+                        | ((uint64_t)pkt[3] << 17)
+                        | ((uint64_t)pkt[4] << 9)
+                        | ((uint64_t)pkt[5] << 1)
                         | ((pkt[6] & 0x80) >> 7);
             uint64_t pcr_extension = ((pkt[6] & 0x01) << 8) | pkt[7];
             uint64_t pcr = pcr_base * 300 + pcr_extension;
@@ -275,11 +275,11 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid, int continuity_counter)
             // Audio or Video stream
             int pts_dts_flag = (pkt[7] >> 6) & 0x03;
             if (pts_dts_flag == 0x02 || pts_dts_flag == 0x03) {
-                int pts_dts = ((pkt[9] & 0x0e) << 29)
-                            | (pkt[10] << 22)
-                            | ((pkt[11] & 0xfe) << 14)
-                            | (pkt[12] << 7)
-                            | (pkt[13] >> 1);
+                uint64_t pts_dts = (((uint64_t)pkt[9] & 0x0e) << 29)
+                            | ((uint64_t)pkt[10] << 22)
+                            | (((uint64_t)pkt[11] & 0xfe) << 14)
+                            | ((uint64_t)pkt[12] << 7)
+                            | ((uint64_t)pkt[13] >> 1);
                 // Further processing of PTS/DTS can be added here
                 if (pts_dts_flag == 0x02) {
                     // PTS only
@@ -292,11 +292,11 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid, int continuity_counter)
                 } else if (pts_dts_flag == 0x03) {
                     // PTS and DTS
                     uint64_t pts = pts_dts;
-                    uint64_t dts = ((pkt[14] & 0x0E) << 29)
-                                | (pkt[15] << 22)
-                                | ((pkt[16] & 0xFE) << 14)
-                                | (pkt[17] << 7)
-                                | (pkt[18] >> 1);
+                    uint64_t dts = (((uint64_t)pkt[14] & 0x0E) << 29)
+                                | ((uint64_t)pkt[15] << 22)
+                                | (((uint64_t)pkt[16] & 0xFE) << 14)
+                                | ((uint64_t)pkt[17] << 7)
+                                | ((uint64_t)pkt[18] >> 1);
                     // mLastPts = pts;
                     // mLastDts = dts;
                     // Process PTS and DTS values as needed
@@ -632,6 +632,13 @@ void TsParser::parsePmt(uint8_t *pkt, int len)
     pmt.last_section_number = pkt[7];
     pmt.pcr_pid = ((pkt[8] & 0x1f) << 8) | pkt[9];
     pmt.program_info_length = ((pkt[10] & 0x0f) << 8) | pkt[11];
+    // store program_info if available
+    if (pmt.program_info_length > 0) {
+        int prog_pos = 12;
+        if (prog_pos + pmt.program_info_length <= len) {
+            pmt.program_info.assign(pkt + prog_pos, pkt + prog_pos + pmt.program_info_length);
+        }
+    }
     // printf("section_length:%d, program_number: 0x%04x, pcr_pid: 0x%04x, program_info_length:%d\n", section_length, program_number, pcr_pid, program_info_length);
     int pos = 12 + pmt.program_info_length;
     while (pos < pmt.section_length + 3 - 4) { // Exclude CRC
@@ -646,7 +653,11 @@ void TsParser::parsePmt(uint8_t *pkt, int len)
         if (pos + stream_info.es_info_length > len) {
             break;
         }
-        storeStreamInfo(pkt + pos, stream_info.es_info_length, stream_info.stream_type, stream_info.elementary_pid);
+        // copy ES info into vector to own the memory safely
+        if (stream_info.es_info_length > 0) {
+            stream_info.es_info.assign(pkt + pos, pkt + pos + stream_info.es_info_length);
+        }
+        storeStreamInfo(stream_info.es_info.empty() ? nullptr : stream_info.es_info.data(), stream_info.es_info_length, stream_info.stream_type, stream_info.elementary_pid);
         pmt.streams.push_back(stream_info);
         pos += stream_info.es_info_length;
     }
