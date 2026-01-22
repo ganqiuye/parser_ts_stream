@@ -218,13 +218,17 @@ void TsParser::parsePes(uint8_t *pkt, int len, int pid, int continuity_counter)
     if (len < 9 + pes_header_length) {
         return;
     }
-    mPidPacketCount[pid]++;
-    if (mPidPacketCount[pid] == 0xf) {
-        mPidPacketCount[pid] = 0;
-    }
-    if (mPidPacketCount[pid] != continuity_counter) {
-        std::cerr << "Warning: PID " << pid << " continuity counter mismatch. Expected: " << (mPidPacketCount[pid]) << ", Actual: " << continuity_counter << std::endl;
-        mPidPacketCount[pid] = continuity_counter;
+    // Check continuity counter using last seen counter per PID
+    auto it = mLastContinuityCounter.find(pid);
+    if (it == mLastContinuityCounter.end()) {
+        // first time seeing this PID's continuity counter
+        mLastContinuityCounter[pid] = continuity_counter;
+    } else {
+        int expected = (it->second + 1) & 0x0F;
+        if (continuity_counter != expected) {
+            std::cerr << "Warning: PID " << pid << " continuity counter mismatch. Expected: " << expected << ", Actual: " << continuity_counter << std::endl;
+        }
+        mLastContinuityCounter[pid] = continuity_counter;
     }
 
     if (mPrintPts) {

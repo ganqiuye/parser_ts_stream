@@ -101,7 +101,7 @@ class TsParser{
         std::map<int, ServiceInfo> mServiceInfos;
         std::map<int, SectionBuffer> mSdtSectionBuf;
         uint64_t mPacketIndex = 0;
-        std::map<int, uint64_t> mPidPacketCount;
+        std::map<int, int> mLastContinuityCounter; // last seen continuity counter per PID (-1 if none)
     private:
         void packet(uint8_t *pkt);
         int parseAdaptationField(uint8_t *pkt, int pid);
